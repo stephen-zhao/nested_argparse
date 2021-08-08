@@ -75,15 +75,30 @@ class NestedArgumentParser(argparse.ArgumentParser):
     kwargs['nest_separator'] = self.nest_separator
 
     return super().add_subparsers(**kwargs)
-  
+
   # =====================================
   # Command line argument parsing methods
   # =====================================
   
   def parse_known_args(self, args=None, namespace=None) -> Tuple[argparse.Namespace, List[str]]:
-      parsed_args, unknown_args = super().parse_known_args(args=args, namespace=namespace)
-      return self._deflatten_namespace(parsed_args), unknown_args
+    parsed_args, unknown_args = super().parse_known_args(args=args, namespace=namespace)
+    return self._deflatten_namespace(parsed_args), unknown_args
 
+  # ==================================
+  # Namespace default accessor methods
+  # ==================================
+
+  def set_defaults(self, **kwargs: Any) -> None:
+    nested_dests = {}
+    for dest, value in kwargs.items():
+      nested_dest = self._get_nested_dest_and_save_original(dest)
+      nested_dests[nested_dest] = value
+    return super().set_defaults(**nested_dests)
+  
+  def get_default(self, dest: str) -> Any:
+    nested_dest = self._get_nested_dest(dest)
+    return super().get_default(nested_dest)
+    
   # ==================================
   # Internal methods
   # ==================================
@@ -202,7 +217,7 @@ class NestedArgumentParser(argparse.ArgumentParser):
     if self.nest_path_components is None or len(self.nest_path_components) == 0:
       return dest
     else:
-    return self.nest_separator.join(self.nest_path_components) + self.nest_separator + dest
+      return self.nest_separator.join(self.nest_path_components) + self.nest_separator + dest
 
   def _get_nested_dest_and_save_original(self, dest: str) -> str:
     nested_dest = self._get_nested_dest(dest)

@@ -1,0 +1,11 @@
+# General build artifacts
+/build
+/dist
+nested_argparse.egg-info
+
+# Python
+__pycache__
+.pytest_cache
+
+# VS Code
+.vscode

@@ -15,12 +15,12 @@ The library exposes a class `NestedArgumentParser` which allows arbitrary nestin
 
 The main difference between this library and its built-in counterpart is the return value of the `parse_args` method. Instead of a flat namespace containing all parsed arguments across all subparsers, `NestedArgumentParser` will produce a namespace tree.
 
-## Quick Example
+## Simple Conceptual Example
 
 Given the following parser:
 
 ```
-Root Parser with prog='root'
+Root Parser
  ├─ positional_1
  ├─ --optional_1
  ├─ --optional_2
@@ -43,14 +43,12 @@ The built-in `ArgumentParser` would not be able to handle the duplication in `de
 
 ```py
 Namespace(
-  root=Namespace(
-    subcommand='sub1',
-    positional_1='Alice',
-    optional_1='Bob',
-    sub1=Namespace(
-      optional_1='Carol',
-      optional2AltName='David'
-    )
+  subcommand='sub1',
+  positional_1='Alice',
+  optional_1='Bob',
+  sub1=Namespace(
+    optional_1='Carol',
+    optional2AltName='David'
   )
 )
 ```

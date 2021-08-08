@@ -199,6 +199,9 @@ class NestedArgumentParser(argparse.ArgumentParser):
     return len(option_string) > 1 and option_string[0] in self.prefix_chars and option_string[1] not in self.prefix_chars
 
   def _get_nested_dest(self, dest: str) -> str:
+    if self.nest_path_components is None or len(self.nest_path_components) == 0:
+      return dest
+    else:
     return self.nest_separator.join(self.nest_path_components) + self.nest_separator + dest
 
   def _get_nested_dest_and_save_original(self, dest: str) -> str:

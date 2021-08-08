@@ -1,6 +1,12 @@
 import argparse
 from typing import Any, Dict, List, Optional, Tuple
 
+DEBUG=False
+
+def _debug_log(*args):
+  if DEBUG:
+    print(*args)
+
 class NestedArgumentParser(argparse.ArgumentParser):
   def __init__(self,
                prog=None,
@@ -79,8 +85,11 @@ class NestedArgumentParser(argparse.ArgumentParser):
   # =====================================
   
   def parse_known_args(self, args=None, namespace=None) -> Tuple[argparse.Namespace, List[str]]:
+    _debug_log('IN override parse_known_args given args=', args, '; namespace=', namespace)
     parsed_args, unknown_args = super().parse_known_args(args=args, namespace=namespace)
-    return self._deflatten_namespace(parsed_args), unknown_args
+    deflattened_args = self._deflatten_namespace(parsed_args)
+    _debug_log('OUT override parse_known_args deflattened_args=', deflattened_args, '; unknown_args=', unknown_args)
+    return deflattened_args, unknown_args
 
   # ==================================
   # Namespace default accessor methods
@@ -102,9 +111,11 @@ class NestedArgumentParser(argparse.ArgumentParser):
   # ==================================
 
   def _deflatten_namespace(self, namespace: argparse.Namespace) -> argparse.Namespace:
+    _debug_log('deflattening..........')
     root_namespace = argparse.Namespace()
     # Loop through all attributes in the original namespace
     for key, value in vars(namespace).items():
+      _debug_log('key=', key, '; value=', value)
       components = key.split(self.nest_separator)
       # Start at the root namespace
       curr_namespace = root_namespace
@@ -126,38 +137,54 @@ class NestedArgumentParser(argparse.ArgumentParser):
           raise ValueError(f'Cannot merge namespaces due to conflict at key "{key}".')
       else:
         setattr(curr_namespace, components[-1], value)
+      _debug_log(root_namespace)
     return root_namespace
 
   def _recursively_merge_namespaces(self, dest_namespace: argparse.Namespace, src_namespace: argparse.Namespace) -> argparse.Namespace:
+    _debug_log('both are namespaces, so recursively merge:')
+    _debug_log('    merge destination:', dest_namespace)
+    _debug_log('    merge source:', src_namespace)
     for attr, src_value in vars(src_namespace).items():
       # Check if destination has attribute with same name
       if hasattr(dest_namespace, attr):
         dest_value = getattr(dest_namespace, attr)
         # Check if both are namespaces, in which case we can recursively merge
         if isinstance(dest_value, argparse.Namespace) and isinstance(src_value, argparse.Namespace):
+          _debug_log('    --> both', attr, 'are namespaces, so setting', attr, 'by merging')
           setattr(dest_namespace, attr, self._recursively_merge_namespaces(dest_value, src_value))
         else:
           raise ValueError(f'Cannot merge namespaces due to conflict at attribute "{attr}".')
       else:
+        _debug_log('    --> no', attr, 'yet, so setting', attr, '=', src_value)
         setattr(dest_namespace, attr, src_value)
+    return dest_namespace
 
   def _add_container_actions(self, container: argparse._ActionsContainer) -> None:
-    if isinstance(container, NestedArgumentParser):
-      for action in container._actions:
-        if action.dest is not None and action.dest in container._original_dest_by_nested_dest:
-          original_dest = container._original_dest_by_nested_dest[action.dest]
-          action.dest = self._get_nested_dest_and_save_original(original_dest)
-      for group in container._action_groups:
-        for action in group._group_actions:
-          if action.dest is not None and action.dest in container._original_dest_by_nested_dest:
-            original_dest = container._original_dest_by_nested_dest[action.dest]
-            action.dest = self._get_nested_dest_and_save_original(original_dest)
-      for mutex_group in container._mutually_exclusive_groups:
-        for action in mutex_group._group_actions:
-          if action.dest is not None and action.dest in container._original_dest_by_nested_dest:
-            original_dest = container._original_dest_by_nested_dest[action.dest]
-            action.dest = self._get_nested_dest_and_save_original(original_dest)
+    self._remap_container_dests(container)
     return super()._add_container_actions(container)
+
+  def _remap_container_dests(self, container: argparse._ActionsContainer) -> None:
+    _debug_log('remapping container', container)
+    original_defaults = container._defaults
+    nested_defaults = { self._get_nested_dest(dest): value for dest, value in original_defaults.items() }
+    _debug_log('    remapping defaults', original_defaults)
+    _debug_log('                    ->', nested_defaults)
+    container._defaults = nested_defaults
+    for action in container._actions:
+      self._remap_action_dest(action)
+
+  def _remap_action_dest(self, action: argparse.Action) -> None:
+    _debug_log('    remapping action', action)
+    if action.dest is not None:
+      original_dest = action.dest
+      nested_dest = self._get_nested_dest_and_save_original(original_dest)
+      _debug_log('    ...', original_dest)
+      _debug_log('     ->', nested_dest)
+      action.dest = nested_dest
+    if isinstance(action, _NestedSubParsersAction) and action.choices is not None:
+      for _, subparser in action.choices.items():
+        if isinstance(subparser, NestedArgumentParser):
+          self._remap_container_dests(subparser)
 
   def _get_positional_kwargs(self, dest: str, **kwargs: Any) -> Dict[str, Any]:
     # Get the nested dest

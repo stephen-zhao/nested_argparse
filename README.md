@@ -24,10 +24,10 @@ Root Parser with prog='root'
  ├─ positional_1
  ├─ --optional_1
  ├─ --optional_2
- └─ subcommand
+ └─ sub parsers with dest='subcommand'
      ├─ Sub Parser 1 with name='sub1'
      │   ├─ --optional_1
-     │   └─ --optional_2
+     │   └─ --optional_2 with dest='optional2AltName'
      └─ Sub Parser 2 with name='sub2'
          ├─ --optional_1
          └─ --optional_2
@@ -49,7 +49,7 @@ Namespace(
     optional_1='Bob',
     sub1=Namespace(
       optional_1='Carol',
-      optional_2='David'
+      optional2AltName='David'
     )
   )
 )

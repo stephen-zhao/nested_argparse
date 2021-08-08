@@ -26,10 +26,9 @@ def test_sanity_check():
   test_argv = ['--with-tapioca', 'make', '--with-tapioca', '--sugar-level', '25']
   args = main_parser.parse_args(test_argv)
   
-  assert 'boba' in args
-  assert 'hasTapioca' in args.boba and args.boba.hasTapioca == True
-  assert 'sugar_level' in args.boba and args.boba.sugar_level == 75
-  assert 'command' in args.boba and args.boba.command == 'make'
-  assert 'make' in args.boba
-  assert 'hasTapioca' in args.boba.make and args.boba.make.hasTapioca == True
-  assert 'sugar_level' in args.boba.make and args.boba.make.sugar_level == 25
+  assert 'hasTapioca' in args and args.hasTapioca == True
+  assert 'sugar_level' in args and args.sugar_level == 75
+  assert 'command' in args and args.command == 'make'
+  assert 'make' in args
+  assert 'hasTapioca' in args.make and args.make.hasTapioca == True
+  assert 'sugar_level' in args.make and args.make.sugar_level == 25

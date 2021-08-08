@@ -23,8 +23,6 @@ class NestedArgumentParser(argparse.ArgumentParser):
     if nest_path is None:
       if nest_dir is not None:
         nest_components = [nest_dir]
-      elif prog is not None:
-        nest_components = [prog]
       else:
         nest_components = []
     else:

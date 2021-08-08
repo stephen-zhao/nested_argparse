@@ -52,3 +52,58 @@ Namespace(
   )
 )
 ```
+
+## API Documentation
+
+The library exposes the following modules.
+
+### Module `nested_argparse`
+
+The module exports the following classes.
+
+#### Class `NestedArgumentParser`
+
+- extends `argparser.ArgumentParser`
+- for documentation for the superclass, see the official [Python API reference docs for `argparse`](https://docs.python.org/3/library/argparse.html).
+
+##### Constructor
+
+In addition to the parameters available to `ArgumentParser` constructor, the following parameters are also accepted:
+
+- Param `nest_dir`, optional, type: `Optional[str]`
+  - When a string is passed in, it is used as the attribute name in the parent namespace to which the nested namespace, where the parsed values will be stored, is assigned to.
+  - When `None` is passed in, no nested namespace is created, and parsed values are directly assigned to the parent namespace. This is the behavior of the base `ArgumentParser`.
+  - Default value: `None`.
+
+- Param `nest_separator`, optional, type: `str`
+  - It is used as the separator to delimit components in the nest path when representing the path as a string (for example, this is used to generate `dest`s)
+  - Default value: `'__'`.
+
+- Param `nest_path`, optional, type: `Optional[List[str]]`
+  - When a list of strings is passed in, it is used as a sequence of nested attribute names from the parent namespace which locates the nested namespace where the parsed values will be stored.
+  - When `None` is passed in, no nested namespace is created, and parsed values are directly assigned to the parent namespace. This is the behavior of the base `ArgumentParser`.
+  
+##### Override `NestedArgumentParser.add_argument`
+
+Instead of adding an argument definition which stores the parsed value to `dest` in the flat top-level namespace, the parsed value will be stored at attribute with the name given by `dest` in the namesapce at the nesting path associated with this parser.
+
+##### Override `NestedArgumentParser.add_subparsers`
+
+The return value of this method is an instance of internal subparser handler `_NestedSubParsersAction`, which exposes extra options for adding subparsers.
+
+##### Override `NestedArgumentParser.parse_args`
+
+The return value of this method is a namespace tree rather than a flat namespace. The tree is built according to the nesting paths associated with each of the parsed values.
+
+##### Override `NestedArgumentParser.parse_known_args`
+
+The return value of this method is a namespace tree rather than a flat namespace. The tree is built according to the nesting paths associated with each of the parsed values.
+
+#### Class `_NestedSubParsersAction`
+
+##### Override `_NestedSubParsersAction.add_parser`
+
+- Param `nest_dir`, optional, type: `Optional[str]`
+  - When a string is passed in, it is used as the attribute name in the parent namespace to which the subparser will store its parsed values to.
+  - When `None` is passed in, the `dest` field is used as the nesting directory instead.
+  - Default value: `None`.

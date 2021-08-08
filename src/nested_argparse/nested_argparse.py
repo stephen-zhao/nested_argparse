@@ -55,6 +55,10 @@ class NestedArgumentParser(argparse.ArgumentParser):
     # Override the subparsers action to use the Nested edition
     self.register('action', 'parsers', _NestedSubParsersAction)
 
+  # ==================================
+  # Optional/Positional adding methods
+  # ==================================
+
   def add_subparsers(self, **kwargs):
     if 'dest' in kwargs:
       # Extract dest from kwargs
@@ -72,9 +76,17 @@ class NestedArgumentParser(argparse.ArgumentParser):
 
     return super().add_subparsers(**kwargs)
   
+  # =====================================
+  # Command line argument parsing methods
+  # =====================================
+  
   def parse_known_args(self, args=None, namespace=None) -> Tuple[argparse.Namespace, List[str]]:
       parsed_args, unknown_args = super().parse_known_args(args=args, namespace=namespace)
       return self._deflatten_namespace(parsed_args), unknown_args
+
+  # ==================================
+  # Internal methods
+  # ==================================
 
   def _deflatten_namespace(self, namespace: argparse.Namespace) -> argparse.Namespace:
     root_namespace = argparse.Namespace()

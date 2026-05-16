@@ -1,7 +1,7 @@
 import argparse
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-DEBUG=False
+DEBUG = False
 
 def _debug_log(*args):
   if DEBUG:
@@ -35,26 +35,25 @@ class NestedArgumentParser(argparse.ArgumentParser):
         nest_components = nest_path
 
     # Save the nest path and related config
-    self.nest_dir: Optional[str] = nest_components[-1] if len(nest_components) > 0 else None
-    self.nest_path_components: List[str] = nest_components
+    self.nest_dir: str | None = nest_components[-1] if len(nest_components) > 0 else None
+    self.nest_path_components: list[str] = nest_components
     self.nest_separator: str = nest_separator
 
     # Mapping from nested dest back to the original dest for contained Actions
-    self._original_dest_by_nested_dest = {}
+    self._original_dest_by_nested_dest: dict[str, str] = {}
 
-    superinit = super(NestedArgumentParser, self).__init__
-    superinit(prog=prog,
-              usage=usage,
-              description=description,
-              epilog=epilog,
-              parents=parents,
-              formatter_class=formatter_class,
-              prefix_chars=prefix_chars,
-              fromfile_prefix_chars=fromfile_prefix_chars,
-              argument_default=argument_default,
-              conflict_handler=conflict_handler,
-              add_help=add_help,
-              allow_abbrev=allow_abbrev)
+    super().__init__(prog=prog,
+                     usage=usage,
+                     description=description,
+                     epilog=epilog,
+                     parents=parents,
+                     formatter_class=formatter_class,
+                     prefix_chars=prefix_chars,
+                     fromfile_prefix_chars=fromfile_prefix_chars,
+                     argument_default=argument_default,
+                     conflict_handler=conflict_handler,
+                     add_help=add_help,
+                     allow_abbrev=allow_abbrev)
 
     # Override the subparsers action to use the Nested edition
     self.register('action', 'parsers', _NestedSubParsersAction)
@@ -84,7 +83,7 @@ class NestedArgumentParser(argparse.ArgumentParser):
   # Command line argument parsing methods
   # =====================================
   
-  def parse_known_args(self, args=None, namespace=None) -> Tuple[argparse.Namespace, List[str]]:
+  def parse_known_args(self, args=None, namespace=None) -> tuple[argparse.Namespace, list[str]]:
     _debug_log('IN override parse_known_args given args=', args, '; namespace=', namespace)
     parsed_args, unknown_args = super().parse_known_args(args=args, namespace=namespace)
     deflattened_args = self._deflatten_namespace(parsed_args)
@@ -186,7 +185,7 @@ class NestedArgumentParser(argparse.ArgumentParser):
         if isinstance(subparser, NestedArgumentParser):
           self._remap_container_dests(subparser)
 
-  def _get_positional_kwargs(self, dest: str, **kwargs: Any) -> Dict[str, Any]:
+  def _get_positional_kwargs(self, dest: str, **kwargs: Any) -> dict[str, Any]:
     # Get the nested dest
     nested_dest = self._get_nested_dest_and_save_original(dest.replace('-', '_'))
 
@@ -195,7 +194,7 @@ class NestedArgumentParser(argparse.ArgumentParser):
 
     return super()._get_positional_kwargs(nested_dest, **kwargs)
   
-  def _get_optional_kwargs(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+  def _get_optional_kwargs(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
     # Extract dest from args and kwargs
     dest = self._extract_dest(*args, **kwargs)
 
@@ -266,14 +265,13 @@ class _NestedSubParsersAction(argparse._SubParsersAction):
                required=False,
                help=None,
                metavar=None) -> None:
-    superinit = super(_NestedSubParsersAction, self).__init__
-    superinit(option_strings,
-              prog,
-              parser_class,
-              dest=dest,
-              required=required,
-              help=help,
-              metavar=metavar)
+    super().__init__(option_strings,
+                     prog,
+                     parser_class,
+                     dest=dest,
+                     required=required,
+                     help=help,
+                     metavar=metavar)
 
     self.base_nest_path_components = base_nest_path
     self.nest_separator = nest_separator

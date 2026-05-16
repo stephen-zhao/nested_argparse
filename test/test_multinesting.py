@@ -1,4 +1,4 @@
-from src.nested_argparse import NestedArgumentParser
+from nested_argparse import NestedArgumentParser
 
 def test_multinesting():
   subparser_3 = NestedArgumentParser()

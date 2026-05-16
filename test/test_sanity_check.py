@@ -1,4 +1,4 @@
-from src.nested_argparse import NestedArgumentParser
+from nested_argparse import NestedArgumentParser
 
 def test_sanity_check():
   # Create a subparser as a standalone parser first

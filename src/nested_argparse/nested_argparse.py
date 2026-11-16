@@ -23,7 +23,11 @@ class NestedArgumentParser(argparse.ArgumentParser):
                argument_default=None,
                conflict_handler='error',
                add_help=True,
-               allow_abbrev=True):
+               allow_abbrev=True,
+               **kwargs):
+    # **kwargs forwards ArgumentParser options added in newer Python versions
+    # (e.g. exit_on_error, and color/suggest_on_error in 3.14, which
+    # _SubParsersAction.add_parser passes to every subparser).
 
     # Determine the nest path of this parser
     if nest_path is None:
@@ -53,7 +57,8 @@ class NestedArgumentParser(argparse.ArgumentParser):
                      argument_default=argument_default,
                      conflict_handler=conflict_handler,
                      add_help=add_help,
-                     allow_abbrev=allow_abbrev)
+                     allow_abbrev=allow_abbrev,
+                     **kwargs)
 
     # Override the subparsers action to use the Nested edition
     self.register('action', 'parsers', _NestedSubParsersAction)
@@ -264,14 +269,16 @@ class _NestedSubParsersAction(argparse._SubParsersAction):
                dest=argparse.SUPPRESS,
                required=False,
                help=None,
-               metavar=None) -> None:
+               metavar=None,
+               **kwargs) -> None:
     super().__init__(option_strings,
                      prog,
                      parser_class,
                      dest=dest,
                      required=required,
                      help=help,
-                     metavar=metavar)
+                     metavar=metavar,
+                     **kwargs)
 
     self.base_nest_path_components = base_nest_path
     self.nest_separator = nest_separator
